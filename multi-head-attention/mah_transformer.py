@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.1"
+__generated_with = "0.23.5"
 app = marimo.App()
 
 
@@ -145,7 +145,6 @@ def _(math, torch):
 
     print(denominator)
     print(denominator_no_math)
-
     return
 
 
@@ -178,7 +177,7 @@ def _(math, nn, torch):
             # we have to now generate the combination of every pos (1 to max seq len) and 
             # and i (from 1 to 512)
             # output target is (max_seq_len, dims)
-        
+
             # this generates (max_seq_len, 1)
             pos = torch.arange(max_seq_len, dtype=float).unsqueeze(1)
 
@@ -207,7 +206,7 @@ def _(math, nn, torch):
             #     to (batch, max_seq_len, embed_dims)
 
             return x + self.pe[:, :seq_len]
-        
+
 
     return
 
@@ -274,7 +273,7 @@ def _(math, nn, torch):
             num_attn_heads: int          # number of attention heads
         ):
             super(MultiHeadAttention, self).__init__()
-        
+
             self.embeddings_size = embeddings_size
             self.num_attn_heads = num_attn_heads
 
@@ -309,12 +308,14 @@ def _(math, nn, torch):
 
         def forward(
             self, 
-            x, # (batch, num_tokens, 512)
+            Q, # (batch, num_tokens, embed_size)
+            K, # (batch, num_tokens, embed_size)
+            V, # (batch, num_tokens, embed_size)
             mask # for encoder -> padding, for decoder -> preventing future lookups
         ):
-            Q = self.query(x) # (batch_size, seq_len, embeddings_size)
-            K = self.key(x)   # (batch_size, seq_len, embeddings_size)
-            V = self.value(x) # (batch_size, seq_len, embeddings_size)
+            Q = self.query(Q) # (batch_size, seq_len, embeddings_size)
+            K = self.key(K)   # (batch_size, seq_len, embeddings_size)
+            V = self.value(V) # (batch_size, seq_len, embeddings_size)
 
             # break down each for attention heads and resize to
             # (batch, seq_len, attention_heads, embed_size_per_head)
@@ -351,46 +352,237 @@ def _(math, nn, torch):
             assert num_attn_heads == self.num_attn_heads
             assert dim_per_head == self.dim_head
             assert dim_per_head * num_attn_heads == self.embeddings_size
-        
+
             output = output.contiguous().view(batch_size, seq_len, self.embeddings_size)
             output = self.output(output)
 
             return output
-        
+
         def split_heads(self, x: torch.Tensor):
             batch_size, seq_len, embed_size = x.size()
             return x.view(batch_size, seq_len, self.num_attn_heads, self.dim_head)
-        
 
+
+    return (MultiHeadAttention,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.image(src="images/position_wise_feedforward_flow.svg")
     return
 
 
 @app.cell
 def _(nn):
+    class FeedForwardNN(nn.Module):
+        def __init__(self, inner_layer_dims, outer_layer_dims):
+            super(FeedForwardNN).__init__()
+
+            # 512 → 2048   (expand)
+            self.inner_layer = nn.Linear(outer_layer_dims, inner_layer_dims)
+            # 2048 -> 512   (contract)
+            self.outer_layer = nn.Linear(inner_layer_dims, outer_layer_dims)
+            # for non-linearity, duh..
+            self.relu = nn.ReLU()
+
+        def forward(self, x): # x -> shape???
+            return self.outer_layer(self.relu(self.inner_layer(x)))
+
+    return (FeedForwardNN,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Encoder and Decoder
+    """)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.vstack([
+        mo.md("""
+    ### Q,K,V for encoders vs decoders 
+
+    **Number of Q,K,V tensors in encoder vs decoders**
+
+    Decoders involve running attention twice (one self attention and one cross attention)
+        """),
+            mo.image(src="images/qkv_count_full_forward_pass.svg"),
+            mo.image(src="images/cross_attention_bridge_encoder_decoder.svg")
+    
+    ])
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.vstack([
+        mo.md(r"""
+        ## Encoder
+        """),
+        mo.image(src="images/encoder_layer_dropout_placement.svg")
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.vstack([
+        mo.md("""
+    ### Padding in case of Encoder
+    ```
+    Sentence 1: "the cat sat"           → [the, cat, sat, <PAD>, <PAD>]
+    Sentence 2: "I saw a big red dog"   → [I, saw, a, big, red]
+    ```"""),
+        mo.image(src="images/encoder_padding_mask_explainer.svg")
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.vstack([
+        mo.md("#### Dropouts in Encoder"),
+        mo.image(src="images/encoder_dropout_placement_and_importance.svg")
+    ])
+    return
+
+
+@app.cell
+def _(FeedForwardNN, MultiHeadAttention, nn):
     class Encoder(nn.Module):
         def __init__(
             self, 
-            embeddings_size, 
-            num_heads,
-            ff_dims,
-            num_layers: int
-        
+            embed_dims, 
+            num_heads, 
+            dropout_p, 
+            ff_nn_dims
         ):
             super(Encoder, self).__init__()
+            self.attention = MultiHeadAttention(embeddings_size=embed_dims, num_attn_heads=num_heads)
+            self.ff_nn = FeedForwardNN(outer_layer_dims=embed_dims, inner_layer_dims=ff_nn_dims)
+
+            self.drop1 = nn.Dropout(dropout_p)
+            self.drop2 = nn.Dropout(dropout_p)
+
+            self.layer_norm1 = nn.LayerNorm(embed_dims)
+            self.layer_norm2 = nn.LayerNorm(embed_dims)
 
         def encode(
             self,
-            x,  # input string
+            x,    # (batch, num_tokens, embed_dims) <-- positional embedding
+            mask, # (batch, num_tokens, embed_dims) <-- padding mask
         ):
-            pass
+            attn_out = self.attention(x, x, x, mask)
+            add1_out = x + self.drop1(attn_out)
+            norm1_out = self.layer_norm1(add1_out)
 
-        
+            ff_nn_out = self.ff_nn(norm1_out)
+            add2_out = self.drop2(ff_nn_out) + norm1_out
+            norm2_out = self.layer_norm2(add2_out)
+
+            return norm2_out
 
     return
 
 
 @app.cell
-def _():
+def _(mo):
+    mo.vstack([
+        mo.md("## Decoder"),
+        mo.image(src="images/decoder_block_anatomy_v2.svg")
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.vstack([
+        mo.md("### Masks used in Decoder Block"),
+        mo.image(src="images/transformer_three_masks_explained.svg")
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.image(src="images/enc_out_inside_decoder_layer_zoom.svg")
+    return
+
+
+@app.cell
+def _(FeedForwardNN, MultiHeadAttention, embed_size, nn):
+    class DecoderBlock(nn.Module):
+        def __init__(self, embed_dims, ff_inner_dims, num_heads, dropout_p):
+            super(DecoderBlock).__init__()
+
+            self.attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
+            self.cross_attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
+
+
+            self.ff_nn = FeedForwardNN(inner_layer_dims=ff_inner_dims, outer_layer_dims=embed_size)
+
+            self.drop1 = nn.Dropout(dropout_p)
+            self.drop2 = nn.Dropout(dropout_p)
+            self.drop3 = nn.Dropout(dropout_p)
+
+            self.layer_norm1 = nn.LayerNorm(embed_size)
+            self.layer_norm2 = nn.LayerNorm(embed_size)
+            self.layer_norm3 = nn.LayerNorm(embed_size)
+
+            self.final_linear = nn.Linear(embed_dims, embed_dims)
+            self.final_softmax = nn.Softmax()
+
+
+        def forward(
+            self, 
+        
+            # emebdding of the tokens decoder has generated/seen before
+            #   for training: causal mask enforces constraint to see the
+            #                 positions before this
+            #  for inference: running embedding of the generated tokens 
+            #                 till now
+            x,  
+
+            # source padding containing fillers (pads) to fill the entire tensor
+            # for eg "the cat sat pad pad" (last 2 pads to fill the shape)
+            src_mask, 
+
+            # target mask not allowing the decoder to see any tokens after it.
+            # only relevant for training. during inference we don't know the 
+            # future tokens anyways
+            tgt_mask, 
+
+
+            # encoder's contextualized understnading of the entire sentence
+            enc_out
+        ):
+        
+            # running self attention for decoder layer first 
+            attn1_out = self.attention(x, x, x, src_mask)
+            # residually pass x and apply dropout to the attention scores generaetd
+            # apply layer norm on the result
+            norm1_out = self.layer_norm1(self.drop1(attn1_out) + x)
+
+            # ask questions to enc_out (which has understanding of the source sentence)
+            #   we use our own Q (question) but K and V of encoder 
+            attn2_out = self.cross_attention(norm1_out, enc_out, enc_out, tgt_mask)
+            norm2_out = self.layer_norm2(norm1_out + self.drop2(attn2_out))
+
+            nn_out = self.ff_nn(norm2_out)
+            layer3_out = self.layer_norm3(self.drop3(nn_out) + norm2_out)
+
+            return self.final_softmax(self.final_linear(layer3_out))
+
+
+    return
+
+
+@app.cell
+def _(mo):
+    mo.image(src="images/decoder_forward_inputs_explained.svg")
     return
 
 
