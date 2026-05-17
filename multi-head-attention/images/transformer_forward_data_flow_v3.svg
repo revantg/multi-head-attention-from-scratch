@@ -1,0 +1,167 @@
+<svg viewBox="0 0 900 820" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="m-teal" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <polygon points="0 0, 10 5, 0 10" fill="#5eead4"/>
+    </marker>
+    <marker id="m-rose" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <polygon points="0 0, 10 5, 0 10" fill="#fda4af"/>
+    </marker>
+    <marker id="m-amber" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <polygon points="0 0, 10 5, 0 10" fill="#fcd34d"/>
+    </marker>
+  </defs>
+
+  <!-- Deep background -->
+  <rect width="900" height="820" fill="#020617"/>
+
+  <!-- Header -->
+  <text x="450" y="45" text-anchor="middle" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" letter-spacing="0.3">Transformer.forward()</text>
+  <text x="450" y="72" text-anchor="middle" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="13">Data Flow Architecture</text>
+  <rect x="60" y="88" width="780" height="1" fill="#1e293b"/>
+
+  <!-- ==================== LEFT COLUMN (Encoder Path) ==================== -->
+
+  <g id="src-input">
+    <rect x="55" y="105" width="180" height="52" rx="10" fill="#0f172a" stroke="#2dd4bf" stroke-width="2"/>
+    <text x="145" y="132" text-anchor="middle" fill="#ccfbf1" font-family="system-ui, sans-serif" font-size="14" font-weight="600">src (token IDs)</text>
+    <text x="145" y="150" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="10">(batch, src_seq_len)</text>
+  </g>
+
+  <line x1="145" y1="157" x2="145" y2="182" stroke="#2dd4bf" stroke-width="2.5" marker-end="url(#m-teal)"/>
+
+  <g id="src-embed">
+    <rect x="70" y="190" width="150" height="44" rx="8" fill="#0f172a" stroke="#14b8a6" stroke-width="1.5"/>
+    <text x="145" y="217" text-anchor="middle" fill="#5eead4" font-family="system-ui, sans-serif" font-size="12" font-weight="500">src_token_embed()</text>
+  </g>
+
+  <line x1="145" y1="234" x2="145" y2="259" stroke="#2dd4bf" stroke-width="2.5" marker-end="url(#m-teal)"/>
+
+  <g id="src-pos">
+    <rect x="70" y="267" width="150" height="44" rx="8" fill="#0f172a" stroke="#14b8a6" stroke-width="1.5"/>
+    <text x="145" y="294" text-anchor="middle" fill="#5eead4" font-family="system-ui, sans-serif" font-size="12" font-weight="500">+ positional_encoding()</text>
+  </g>
+
+  <text x="145" y="328" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="10">(batch, src_len, embed_dims)</text>
+  <line x1="145" y1="311" x2="145" y2="341" stroke="#2dd4bf" stroke-width="2.5" marker-end="url(#m-teal)"/>
+
+  <g id="src-mask">
+    <rect x="15" y="356" width="95" height="32" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="62" y="377" text-anchor="middle" fill="#fcd34d" font-family="system-ui, sans-serif" font-size="11" font-weight="500">src_mask</text>
+  </g>
+
+  <!-- Encoder Block -->
+  <g id="encoder-block">
+    <!-- Tinted background for the encoder region -->
+    <rect x="40" y="356" width="210" height="240" rx="14" fill="#134e4a" opacity="0.12" stroke="#14b8a6" stroke-width="2"/>
+    <text x="145" y="392" text-anchor="middle" fill="#ccfbf1" font-family="system-ui, sans-serif" font-size="18" font-weight="700">Encoder</text>
+    <text x="145" y="412" text-anchor="middle" fill="#5eead4" font-family="system-ui, sans-serif" font-size="11">EncoderBlock</text>
+
+    <rect x="65" y="428" width="160" height="34" rx="6" fill="#0f172a" stroke="#14b8a6" stroke-width="1.5"/>
+    <text x="145" y="450" text-anchor="middle" fill="#ccfbf1" font-family="system-ui, sans-serif" font-size="12" font-weight="600">EncoderLayer × N</text>
+
+    <rect x="82" y="472" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="145" y="490" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">MultiHeadAttention</text>
+
+    <rect x="82" y="506" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="145" y="524" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">Add &amp; Norm</text>
+
+    <rect x="82" y="540" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="145" y="558" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">FeedForward</text>
+  </g>
+
+  <text x="145" y="612" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="10">enc_out</text>
+  <text x="145" y="630" text-anchor="middle" fill="#64748b" font-family="ui-monospace, monospace" font-size="9">(batch, src_len, embed)</text>
+
+  <!-- ==================== RIGHT COLUMN (Decoder Path) ==================== -->
+
+  <g id="tgt-input">
+    <rect x="665" y="105" width="180" height="52" rx="10" fill="#0f172a" stroke="#fb7185" stroke-width="2"/>
+    <text x="755" y="132" text-anchor="middle" fill="#ffe4e6" font-family="system-ui, sans-serif" font-size="14" font-weight="600">tgt (token IDs)</text>
+    <text x="755" y="150" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="10">(batch, tgt_seq_len)</text>
+  </g>
+
+  <line x1="755" y1="157" x2="755" y2="182" stroke="#fb7185" stroke-width="2.5" marker-end="url(#m-rose)"/>
+
+  <g id="tgt-embed">
+    <rect x="680" y="190" width="150" height="44" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="755" y="217" text-anchor="middle" fill="#d8b4fe" font-family="system-ui, sans-serif" font-size="12" font-weight="500">tgt_token_embed()</text>
+  </g>
+
+  <line x1="755" y1="234" x2="755" y2="259" stroke="#fb7185" stroke-width="2.5" marker-end="url(#m-rose)"/>
+
+  <g id="tgt-pos">
+    <rect x="680" y="267" width="150" height="44" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="755" y="294" text-anchor="middle" fill="#d8b4fe" font-family="system-ui, sans-serif" font-size="12" font-weight="500">+ positional_encoding()</text>
+  </g>
+
+  <text x="755" y="328" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="10">(batch, tgt_len, embed_dims)</text>
+  <line x1="755" y1="311" x2="755" y2="341" stroke="#fb7185" stroke-width="2.5" marker-end="url(#m-rose)"/>
+
+  <g id="tgt-mask">
+    <rect x="790" y="356" width="95" height="32" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="837" y="377" text-anchor="middle" fill="#fcd34d" font-family="system-ui, sans-serif" font-size="11" font-weight="500">tgt_mask</text>
+  </g>
+
+  <!-- Decoder Block -->
+  <g id="decoder-block">
+    <rect x="650" y="356" width="210" height="290" rx="14" fill="#581c87" opacity="0.12" stroke="#a855f7" stroke-width="2"/>
+    <text x="755" y="392" text-anchor="middle" fill="#fae8ff" font-family="system-ui, sans-serif" font-size="18" font-weight="700">Decoder</text>
+    <text x="755" y="412" text-anchor="middle" fill="#d8b4fe" font-family="system-ui, sans-serif" font-size="11">DecoderBlock</text>
+
+    <rect x="675" y="428" width="160" height="34" rx="6" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="755" y="450" text-anchor="middle" fill="#fae8ff" font-family="system-ui, sans-serif" font-size="12" font-weight="600">DecoderLayer × N</text>
+
+    <rect x="692" y="472" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="755" y="490" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">Masked Self-Attn</text>
+
+    <rect x="692" y="506" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="755" y="524" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">Add &amp; Norm</text>
+
+    <rect x="692" y="540" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="755" y="558" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">Cross-Attention</text>
+
+    <rect x="692" y="574" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="755" y="592" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">Add &amp; Norm</text>
+
+    <rect x="692" y="608" width="126" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="755" y="626" text-anchor="middle" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="10">FeedForward</text>
+  </g>
+
+  <line x1="755" y1="646" x2="755" y2="681" stroke="#fb7185" stroke-width="2.5" marker-end="url(#m-rose)"/>
+
+  <!-- Final Linear -->
+  <g id="final-linear">
+    <rect x="680" y="690" width="150" height="44" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="755" y="717" text-anchor="middle" fill="#d8b4fe" font-family="system-ui, sans-serif" font-size="12" font-weight="500">final_linear()</text>
+    <text x="755" y="745" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="10">embed_dims → tgt_vocab_size</text>
+  </g>
+
+  <line x1="755" y1="734" x2="755" y2="774" stroke="#fb7185" stroke-width="2.5" marker-end="url(#m-rose)"/>
+
+  <!-- Output -->
+  <g id="output">
+    <rect x="665" y="782" width="180" height="52" rx="10" fill="#0f172a" stroke="#fb7185" stroke-width="2"/>
+    <text x="755" y="809" text-anchor="middle" fill="#ffe4e6" font-family="system-ui, sans-serif" font-size="15" font-weight="700">logits</text>
+    <text x="755" y="827" text-anchor="middle" fill="#94a3b8" font-family="ui-monospace, monospace" font-size="10">(batch, tgt_len, vocab_size)</text>
+  </g>
+
+  <!-- ==================== CROSS-ATTENTION ==================== -->
+  <line x1="250" y1="540" x2="692" y2="553" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#m-amber)"/>
+  <rect x="410" y="485" width="120" height="24" rx="5" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+  <text x="470" y="502" text-anchor="middle" fill="#fcd34d" font-family="system-ui, sans-serif" font-size="11" font-weight="600">enc_out (K, V)</text>
+
+  <!-- ==================== LEGEND ==================== -->
+  <g id="legend">
+    <rect x="315" y="665" width="270" height="135" rx="12" fill="#0f172a" stroke="#1e293b" stroke-width="1.5"/>
+    <text x="450" y="695" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="600">Key Flow</text>
+
+    <line x1="340" y1="720" x2="375" y2="720" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round"/>
+    <text x="390" y="725" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">Source path (encoder)</text>
+
+    <line x1="340" y1="745" x2="375" y2="745" stroke="#fb7185" stroke-width="3" stroke-linecap="round"/>
+    <text x="390" y="750" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">Target path (decoder)</text>
+
+    <line x1="340" y1="770" x2="375" y2="770" stroke="#fbbf24" stroke-width="3" stroke-dasharray="6,4" stroke-linecap="round"/>
+    <text x="390" y="775" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">Cross-attention (K, V)</text>
+  </g>
+</svg>

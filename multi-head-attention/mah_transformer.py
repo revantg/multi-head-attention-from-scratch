@@ -26,9 +26,9 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Here's the original formulation from "Attention Is All You Need" (Vaswani et al., 2017):
-
     ## The positional encoding formulas
+
+    Here's the original formulation from "Attention Is All You Need" (Vaswani et al., 2017):
 
     For position $pos$ in the sequence and dimension $i$ in the embedding vector:
 
@@ -156,6 +156,8 @@ def _(math, nn, torch):
             embed_dims,  # dimensions for each embedding
             max_seq_len  # max number of tokens
         ):
+            super().__init__()
+        
             # the job of nn.Embedding is to translate the incoming token to a embedding of a dictionary of fixed size and items
             # we need seperate embeddings for both since this program is written for translating from one language to other. each language will have it's own dict
             #    - encoder will have dict of source language
@@ -208,7 +210,7 @@ def _(math, nn, torch):
             return x + self.pe[:, :seq_len]
 
 
-    return
+    return (PositionalEmbedding,)
 
 
 @app.cell(hide_code=True)
@@ -272,7 +274,7 @@ def _(math, nn, torch):
             embeddings_size: int,   # size of input embeddings
             num_attn_heads: int          # number of attention heads
         ):
-            super(MultiHeadAttention, self).__init__()
+            super().__init__()
 
             self.embeddings_size = embeddings_size
             self.num_attn_heads = num_attn_heads
@@ -334,7 +336,7 @@ def _(math, nn, torch):
             attn_scores = torch.matmul(Q, K.transpose(-2, -1)) # b, attn_head, seq_len, seq_len
             attn_scores = attn_scores / math.sqrt(self.dim_head)
 
-            if mask:
+            if mask is not None:
             # Apply mask if provided (useful for preventing attention to certain parts like padding)
                 attn_scores = attn_scores.masked_fill(mask == 0, -1e9)
 
@@ -376,7 +378,7 @@ def _(mo):
 def _(nn):
     class FeedForwardNN(nn.Module):
         def __init__(self, inner_layer_dims, outer_layer_dims):
-            super(FeedForwardNN).__init__()
+            super().__init__()
 
             # 512 → 2048   (expand)
             self.inner_layer = nn.Linear(outer_layer_dims, inner_layer_dims)
@@ -420,7 +422,7 @@ def _(mo):
 def _(mo):
     mo.vstack([
         mo.md(r"""
-        ## Encoder
+        ## Encoder Layer (single layer)
         """),
         mo.image(src="images/encoder_layer_dropout_placement.svg")
     ])
@@ -452,7 +454,7 @@ def _(mo):
 
 @app.cell
 def _(FeedForwardNN, MultiHeadAttention, nn):
-    class Encoder(nn.Module):
+    class EncoderLayer(nn.Module):
         def __init__(
             self, 
             embed_dims, 
@@ -460,7 +462,7 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
             dropout_p, 
             ff_nn_dims
         ):
-            super(Encoder, self).__init__()
+            super().__init__()
             self.attention = MultiHeadAttention(embeddings_size=embed_dims, num_attn_heads=num_heads)
             self.ff_nn = FeedForwardNN(outer_layer_dims=embed_dims, inner_layer_dims=ff_nn_dims)
 
@@ -485,13 +487,13 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
 
             return norm2_out
 
-    return
+    return (EncoderLayer,)
 
 
 @app.cell
 def _(mo):
     mo.vstack([
-        mo.md("## Decoder"),
+        mo.md("## Decoder Layer (single layer)"),
         mo.image(src="images/decoder_block_anatomy_v2.svg")
     ])
     return
@@ -514,9 +516,9 @@ def _(mo):
 
 @app.cell
 def _(FeedForwardNN, MultiHeadAttention, embed_size, nn):
-    class DecoderBlock(nn.Module):
+    class DecoderLayer(nn.Module):
         def __init__(self, embed_dims, ff_inner_dims, num_heads, dropout_p):
-            super(DecoderBlock).__init__()
+            super().__init__()
 
             self.attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
             self.cross_attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
@@ -577,12 +579,163 @@ def _(FeedForwardNN, MultiHeadAttention, embed_size, nn):
             return self.final_softmax(self.final_linear(layer3_out))
 
 
-    return
+    return (DecoderLayer,)
 
 
 @app.cell
 def _(mo):
     mo.image(src="images/decoder_forward_inputs_explained.svg")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Encoder Block
+    """)
+    return
+
+
+@app.cell
+def _(EncoderLayer, nn, num_end):
+    class EncodeBlock(nn.Module):
+        def __init__(
+            self, 
+            num_enc, # number of EncoderLayer in EncoderBlock
+            embed_dims,  # num of dims for encoding a token
+            num_heads,  # num of heads for attention computation
+            dropout_p,  # common prob for droput for all the skip connections,
+            ff_nn_dims  # ff NN works this way embed_dims -> ff_nn_dims -> embed_dims
+        ):
+            super().__init__()
+
+            self.encoder_layer = nn.ModuleList(modules=[
+                EncoderLayer(embed_dims, num_heads, dropout_p, ff_nn_dims)
+                for _ in range(num_end)
+            ])
+
+        def forward(
+            self, 
+            x,  # input sequence: batch, seq_len, embed_dims
+            mask,   # mask for padding: batch, seq_len, embed_dims
+        ):
+            return self.encoder_layer(x, mask)
+
+    return (EncodeBlock,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Decoder Block
+    """)
+    return
+
+
+@app.cell
+def _(DecoderLayer, nn):
+    class DecoderBlock(nn.Module):
+        def __init__(
+            self,
+            num_decoder_layers,  # num of decode layers in decode block
+            embed_dims,          # num of dims for each token
+            num_heads,           # num of heads for attention 
+            ff_nn_dims,          # internal ff_nn dims
+            dropout_p,           # dropout prob (common to all dropouts)
+        ):
+            super().__init__()
+
+            self.decoder_layers = nn.ModuleList(modules=[
+                DecoderLayer(embed_dims, ff_nn_dims, num_heads, dropout_p)
+                for _ in range(num_decoder_layers)
+            ])
+
+        def forward(self, x, src_mask, tgt_mask, enc_out):
+            return self.decoder_layers(x, src_mask, tgt_mask, enc_out)
+        
+
+    return (DecoderBlock,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Transformer
+    """)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.image(src="images/transformer_forward_data_flow_v3.svg")
+    return
+
+
+@app.cell
+def _(DecoderBlock, EncodeBlock, PositionalEmbedding, nn):
+    class Transformer(nn.Module):
+        def __init__(
+            self,
+            src_vocab_size,
+            tgt_vocab_size,
+            embed_dims,
+            num_heads,
+            num_encoder_layers,
+            num_decoder_layers,
+            ff_nn_dims,
+            max_seq_len,
+            dropout_p=0.1,
+        ):
+            super().__init__()
+
+            # Token embeddings (moved out of PositionalEmbedding)
+            self.src_token_embed = nn.Embedding(src_vocab_size, embed_dims)
+            self.tgt_token_embed = nn.Embedding(tgt_vocab_size, embed_dims)
+
+            # Positional encoding (no longer owns token embeddings)
+            self.positional_encoding = PositionalEmbedding(embed_dims, max_seq_len)
+
+            # Encoder and decoder stacks
+            self.encoder = EncodeBlock(
+                num_enc=num_encoder_layers,
+                embed_dims=embed_dims,
+                num_heads=num_heads,
+                dropout_p=dropout_p,
+                ff_nn_dims=ff_nn_dims,
+            )
+            self.decoder = DecoderBlock(
+                num_decoder_layers=num_decoder_layers,
+                embed_dims=embed_dims,
+                num_heads=num_heads,
+                ff_nn_dims=ff_nn_dims,
+                dropout_p=dropout_p,
+            )
+
+            # Final projection: embed_dims → vocab_size
+            self.final_linear = nn.Linear(embed_dims, tgt_vocab_size)
+
+        def forward(
+            self,
+            src,           # (batch, src_seq_len) — token IDs
+            tgt,           # (batch, tgt_seq_len) — token IDs
+            src_mask,      # (batch, 1, 1, src_seq_len) — padding mask
+            tgt_mask,      # (batch, 1, tgt_seq_len, tgt_seq_len) — causal + padding
+        ):
+            # Embed and add positional info
+            src_embed = self.positional_encoding(self.src_token_embed(src))
+            tgt_embed = self.positional_encoding(self.tgt_token_embed(tgt))
+
+            # Encode
+            enc_out = self.encoder(src_embed, src_mask)
+
+            # Decode (using encoder output for cross-attention)
+            dec_out = self.decoder(tgt_embed, src_mask, tgt_mask, enc_out)
+
+            # Project to vocabulary logits
+            logits = self.final_linear(dec_out)
+
+            return logits
+
     return
 
 
