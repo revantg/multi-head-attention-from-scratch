@@ -515,24 +515,24 @@ def _(mo):
 
 
 @app.cell
-def _(FeedForwardNN, MultiHeadAttention, embed_size, nn):
+def _(FeedForwardNN, MultiHeadAttention, nn):
     class DecoderLayer(nn.Module):
         def __init__(self, embed_dims, ff_inner_dims, num_heads, dropout_p):
             super().__init__()
 
-            self.attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
-            self.cross_attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
+            self.attention = MultiHeadAttention(embeddings_size=embed_dims, num_attn_heads=num_heads)
+            self.cross_attention = MultiHeadAttention(embeddings_size=embed_dims, num_attn_heads=num_heads)
 
 
-            self.ff_nn = FeedForwardNN(inner_layer_dims=ff_inner_dims, outer_layer_dims=embed_size)
+            self.ff_nn = FeedForwardNN(inner_layer_dims=ff_inner_dims, outer_layer_dims=embed_dims)
 
             self.drop1 = nn.Dropout(dropout_p)
             self.drop2 = nn.Dropout(dropout_p)
             self.drop3 = nn.Dropout(dropout_p)
 
-            self.layer_norm1 = nn.LayerNorm(embed_size)
-            self.layer_norm2 = nn.LayerNorm(embed_size)
-            self.layer_norm3 = nn.LayerNorm(embed_size)
+            self.layer_norm1 = nn.LayerNorm(embed_dims)
+            self.layer_norm2 = nn.LayerNorm(embed_dims)
+            self.layer_norm3 = nn.LayerNorm(embed_dims)
 
             self.final_linear = nn.Linear(embed_dims, embed_dims)
             self.final_softmax = nn.Softmax()
