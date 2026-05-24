@@ -651,7 +651,9 @@ def _(DecoderLayer, nn):
             ])
 
         def forward(self, x, src_mask, tgt_mask, enc_out):
-            return self.decoder_layers(x, src_mask, tgt_mask, enc_out)
+            for layer in self.decoder_layers:
+                x = layer(x, src_mask, tgt_mask, enc_out)
+            return x
         
 
     return (DecoderBlock,)
