@@ -534,8 +534,6 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
             self.layer_norm2 = nn.LayerNorm(embed_dims)
             self.layer_norm3 = nn.LayerNorm(embed_dims)
 
-            self.final_linear = nn.Linear(embed_dims, embed_dims)
-            self.final_softmax = nn.Softmax()
 
 
         def forward(
@@ -576,7 +574,7 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
             nn_out = self.ff_nn(norm2_out)
             layer3_out = self.layer_norm3(self.drop3(nn_out) + norm2_out)
 
-            return self.final_softmax(self.final_linear(layer3_out))
+            return layer3_out
 
 
     return (DecoderLayer,)
