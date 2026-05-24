@@ -1,0 +1,14 @@
+[project]
+name = "transformer-learning"
+version = "0.1.0"
+description = "Personal repo for learning different attention mechanisms and transformer architectures."
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.uv.workspace]
+members = ["multi-head-attention"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.0",
+]

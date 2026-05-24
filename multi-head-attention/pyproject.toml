@@ -1,0 +1,11 @@
+[project]
+name = "multi-head-attention"
+version = "0.1.0"
+description = "Interactive notebook for learning multi-head attention mechanisms."
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = [
+    "marimo>=0.23.0",
+    "torch>=2.0.0",
+    "pydantic-ai",
+]
