@@ -563,14 +563,14 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
         ):
         
             # running self attention for decoder layer first 
-            attn1_out = self.attention(x, x, x, src_mask)
+            attn1_out = self.attention(x, x, x, tgt_mask)
             # residually pass x and apply dropout to the attention scores generaetd
             # apply layer norm on the result
             norm1_out = self.layer_norm1(self.drop1(attn1_out) + x)
 
             # ask questions to enc_out (which has understanding of the source sentence)
             #   we use our own Q (question) but K and V of encoder 
-            attn2_out = self.cross_attention(norm1_out, enc_out, enc_out, tgt_mask)
+            attn2_out = self.cross_attention(norm1_out, enc_out, enc_out, src_mask)
             norm2_out = self.layer_norm2(norm1_out + self.drop2(attn2_out))
 
             nn_out = self.ff_nn(norm2_out)
