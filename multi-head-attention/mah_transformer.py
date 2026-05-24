@@ -595,7 +595,7 @@ def _(mo):
 
 
 @app.cell
-def _(EncoderLayer, nn, num_end):
+def _(EncoderLayer, nn):
     class EncodeBlock(nn.Module):
         def __init__(
             self, 
@@ -607,17 +607,19 @@ def _(EncoderLayer, nn, num_end):
         ):
             super().__init__()
 
-            self.encoder_layer = nn.ModuleList(modules=[
+            self.encoder_layers = nn.ModuleList(modules=[
                 EncoderLayer(embed_dims, num_heads, dropout_p, ff_nn_dims)
-                for _ in range(num_end)
+                for _ in range(num_enc)
             ])
 
         def forward(
-            self, 
+            self,
             x,  # input sequence: batch, seq_len, embed_dims
             mask,   # mask for padding: batch, seq_len, embed_dims
         ):
-            return self.encoder_layer(x, mask)
+            for layer in self.encoder_layers:
+                x = layer.encode(x, mask)
+            return x
 
     return (EncodeBlock,)
 
@@ -649,7 +651,9 @@ def _(DecoderLayer, nn):
             ])
 
         def forward(self, x, src_mask, tgt_mask, enc_out):
-            return self.decoder_layers(x, src_mask, tgt_mask, enc_out)
+            for layer in self.decoder_layers:
+                x = layer(x, src_mask, tgt_mask, enc_out)
+            return x
         
 
     return (DecoderBlock,)
