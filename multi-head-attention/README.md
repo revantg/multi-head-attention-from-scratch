@@ -13,8 +13,8 @@ Interactive notebook for learning multi-head attention mechanisms.
 ## Run
 
 ```bash
-pip install -r requirements.txt
-marimo edit mah_transformer.py
+uv sync --project multi-head-attention
+uv run --project multi-head-attention marimo edit multi-head-attention/mah_transformer.py
 ```
 
 ## Resources Used
