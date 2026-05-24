@@ -515,27 +515,25 @@ def _(mo):
 
 
 @app.cell
-def _(FeedForwardNN, MultiHeadAttention, embed_size, nn):
+def _(FeedForwardNN, MultiHeadAttention, nn):
     class DecoderLayer(nn.Module):
         def __init__(self, embed_dims, ff_inner_dims, num_heads, dropout_p):
             super().__init__()
 
-            self.attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
-            self.cross_attention = MultiHeadAttention(embeddings_size=embed_size, num_attn_heads=num_heads)
+            self.attention = MultiHeadAttention(embeddings_size=embed_dims, num_attn_heads=num_heads)
+            self.cross_attention = MultiHeadAttention(embeddings_size=embed_dims, num_attn_heads=num_heads)
 
 
-            self.ff_nn = FeedForwardNN(inner_layer_dims=ff_inner_dims, outer_layer_dims=embed_size)
+            self.ff_nn = FeedForwardNN(inner_layer_dims=ff_inner_dims, outer_layer_dims=embed_dims)
 
             self.drop1 = nn.Dropout(dropout_p)
             self.drop2 = nn.Dropout(dropout_p)
             self.drop3 = nn.Dropout(dropout_p)
 
-            self.layer_norm1 = nn.LayerNorm(embed_size)
-            self.layer_norm2 = nn.LayerNorm(embed_size)
-            self.layer_norm3 = nn.LayerNorm(embed_size)
+            self.layer_norm1 = nn.LayerNorm(embed_dims)
+            self.layer_norm2 = nn.LayerNorm(embed_dims)
+            self.layer_norm3 = nn.LayerNorm(embed_dims)
 
-            self.final_linear = nn.Linear(embed_dims, embed_dims)
-            self.final_softmax = nn.Softmax()
 
 
         def forward(
@@ -563,20 +561,20 @@ def _(FeedForwardNN, MultiHeadAttention, embed_size, nn):
         ):
         
             # running self attention for decoder layer first 
-            attn1_out = self.attention(x, x, x, src_mask)
+            attn1_out = self.attention(x, x, x, tgt_mask)
             # residually pass x and apply dropout to the attention scores generaetd
             # apply layer norm on the result
             norm1_out = self.layer_norm1(self.drop1(attn1_out) + x)
 
             # ask questions to enc_out (which has understanding of the source sentence)
             #   we use our own Q (question) but K and V of encoder 
-            attn2_out = self.cross_attention(norm1_out, enc_out, enc_out, tgt_mask)
+            attn2_out = self.cross_attention(norm1_out, enc_out, enc_out, src_mask)
             norm2_out = self.layer_norm2(norm1_out + self.drop2(attn2_out))
 
             nn_out = self.ff_nn(norm2_out)
             layer3_out = self.layer_norm3(self.drop3(nn_out) + norm2_out)
 
-            return self.final_softmax(self.final_linear(layer3_out))
+            return layer3_out
 
 
     return (DecoderLayer,)
