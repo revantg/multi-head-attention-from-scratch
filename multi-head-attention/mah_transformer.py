@@ -149,7 +149,7 @@ def _(math, torch):
 
 
 @app.cell
-def _(emebed_dims, math, nn, torch):
+def _(math, nn, torch):
     class PositionalEmbedding(nn.Module):
         def __init__(
             self, 
@@ -166,7 +166,7 @@ def _(emebed_dims, math, nn, torch):
             # fraction is just the part inside sin/cos but without the pos
             fraction = torch.exp(
                 -1 * \
-                torch.arange(0, embed_dims, 2, dtype=float) / emebed_dims *\
+                torch.arange(0, embed_dims, 2, dtype=float) / embed_dims *\
                 math.log(10_000)
             )
 
@@ -530,8 +530,6 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
             self.layer_norm2 = nn.LayerNorm(embed_dims)
             self.layer_norm3 = nn.LayerNorm(embed_dims)
 
-            self.final_linear = nn.Linear(embed_dims, embed_dims)
-            self.final_softmax = nn.Softmax()
 
 
         def forward(
@@ -559,20 +557,31 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
         ):
 
             # running self attention for decoder layer first 
-            attn1_out = self.attention(x, x, x, src_mask)
+            # --- masking rule of thumb: the mask always matches the KEYS --- #
+            #
+            #   keys come from target  -> use tgt_mask
+            #   keys come from source  -> use src_mask
+            #
+            #                        query    key/val   mask       score shape
+            #                        ------   -------   --------   ------------------
+            #   enc self-attention   source   source    src_mask   src_len x src_len
+            #   dec self-attention   target   target    tgt_mask   tgt_len x tgt_len  (causal)
+            #   dec cross-attention  target   source    src_mask   tgt_len x src_len
+
+            attn1_out = self.attention(x, x, x, tgt_mask)
             # residually pass x and apply dropout to the attention scores generaetd
             # apply layer norm on the result
             norm1_out = self.layer_norm1(self.drop1(attn1_out) + x)
 
             # ask questions to enc_out (which has understanding of the source sentence)
             #   we use our own Q (question) but K and V of encoder 
-            attn2_out = self.cross_attention(norm1_out, enc_out, enc_out, tgt_mask)
+            attn2_out = self.cross_attention(norm1_out, enc_out, enc_out, src_mask)
             norm2_out = self.layer_norm2(norm1_out + self.drop2(attn2_out))
 
             nn_out = self.ff_nn(norm2_out)
             layer3_out = self.layer_norm3(self.drop3(nn_out) + norm2_out)
 
-            return self.final_softmax(self.final_linear(layer3_out))
+            return layer3_out
 
 
     return (DecoderLayer,)
@@ -593,7 +602,7 @@ def _(mo):
 
 
 @app.cell
-def _(EncoderLayer, nn, num_end):
+def _(EncoderLayer, nn):
     class EncodeBlock(nn.Module):
         def __init__(
             self, 
@@ -605,17 +614,19 @@ def _(EncoderLayer, nn, num_end):
         ):
             super().__init__()
 
-            self.encoder_layer = nn.ModuleList(modules=[
+            self.encoder_layers = nn.ModuleList(modules=[
                 EncoderLayer(embed_dims, num_heads, dropout_p, ff_nn_dims)
-                for _ in range(num_end)
+                for _ in range(num_enc)
             ])
 
         def forward(
-            self, 
+            self,
             x,  # input sequence: batch, seq_len, embed_dims
             mask,   # mask for padding: batch, seq_len, embed_dims
         ):
-            return self.encoder_layer(x, mask)
+            for layer in self.encoder_layers:
+                x = layer.encode(x, mask)
+            return x
 
     return (EncodeBlock,)
 
@@ -650,6 +661,7 @@ def _(DecoderLayer, nn):
             for layer in self.decoder_layers:
                 x = layer(x, src_mask, tgt_mask, enc_out)
             return x
+
 
     return (DecoderBlock,)
 
