@@ -1,0 +1,265 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1680" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="srcGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f4f8"/>
+      <stop offset="100%" stop-color="#d1ecf1"/>
+    </linearGradient>
+    <linearGradient id="tgtGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef3e2"/>
+      <stop offset="100%" stop-color="#fde8c8"/>
+    </linearGradient>
+    <linearGradient id="correctGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f5e9"/>
+      <stop offset="100%" stop-color="#c8e6c9"/>
+    </linearGradient>
+    <linearGradient id="wrongGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffebee"/>
+      <stop offset="100%" stop-color="#ffcdd2"/>
+    </linearGradient>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="108%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1565c0"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#c62828"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#e65100"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="1680" fill="#fafbfc" rx="0"/>
+
+  <!-- ==================== TITLE ==================== -->
+  <rect x="0" y="0" width="1100" height="70" fill="url(#headerGrad)" rx="0"/>
+  <text x="550" y="46" text-anchor="middle" fill="white" font-size="26" font-weight="700" letter-spacing="0.5">Decoder Mask Routing — First Principles</text>
+
+  <!-- ==================== PRINCIPLE BOX ==================== -->
+  <rect x="30" y="90" width="1040" height="70" rx="10" fill="#f3e5f5" stroke="#ab47bc" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="550" y="122" text-anchor="middle" fill="#4a148c" font-size="17" font-weight="700">Core question: "Where are my Keys and Values coming from?"</text>
+  <text x="550" y="146" text-anchor="middle" fill="#6a1b9a" font-size="14">K,V from decoder → need causal mask (prevent future-peeking) · K,V from encoder → need padding mask (ignore &lt;PAD&gt;)</text>
+
+  <!-- ==================== SECTION 1: TWO MASK TYPES ==================== -->
+  <text x="50" y="200" fill="#1a1a2e" font-size="21" font-weight="700">The Two Masks</text>
+  <line x1="50" y1="210" x2="250" y2="210" stroke="#1a1a2e" stroke-width="2.5"/>
+
+  <!-- PADDING MASK (left) -->
+  <rect x="30" y="225" width="505" height="310" rx="10" fill="url(#srcGrad)" stroke="#0097a7" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="30" y="225" width="505" height="42" rx="10" fill="#0097a7"/>
+  <rect x="30" y="257" width="505" height="10" fill="#0097a7"/>
+  <text x="282" y="252" text-anchor="middle" fill="white" font-size="16" font-weight="700">PADDING MASK  (src_mask)</text>
+
+  <text x="55" y="290" fill="#00695c" font-size="13" font-weight="600">WHY IT EXISTS</text>
+  <text x="55" y="310" fill="#37474f" font-size="13.5">Sentences have different lengths. Shorter ones get</text>
+  <text x="55" y="328" fill="#37474f" font-size="13.5">filled with &lt;PAD&gt; tokens to match the longest. These</text>
+  <text x="55" y="346" fill="#37474f" font-size="13.5">PADs are fake — they must not influence attention.</text>
+
+  <text x="55" y="378" fill="#00695c" font-size="13" font-weight="600">EXAMPLE</text>
+  <text x="55" y="398" fill="#37474f" font-size="13.5" font-family="'SF Mono', 'Fira Code', monospace">"the cat sat"         → [the, cat, sat, <tspan fill="#c62828" font-weight="600">PAD, PAD</tspan>]</text>
+  <text x="55" y="416" fill="#37474f" font-size="13.5" font-family="'SF Mono', 'Fira Code', monospace">"I saw a big red dog" → [I, saw, a, big, red]</text>
+
+  <text x="55" y="448" fill="#00695c" font-size="13" font-weight="600">SHAPE</text>
+  <text x="55" y="468" fill="#37474f" font-size="13.5" font-family="'SF Mono', 'Fira Code', monospace">(batch, 1, 1, src_len)</text>
+  <text x="55" y="488" fill="#546e7a" font-size="12.5">Same mask for every query position — PAD is PAD</text>
+  <text x="55" y="504" fill="#546e7a" font-size="12.5">regardless of where you're querying from.</text>
+
+  <!-- CAUSAL MASK (right) -->
+  <rect x="565" y="225" width="505" height="310" rx="10" fill="url(#tgtGrad)" stroke="#f57c00" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="565" y="225" width="505" height="42" rx="10" fill="#f57c00"/>
+  <rect x="565" y="257" width="505" height="10" fill="#f57c00"/>
+  <text x="817" y="252" text-anchor="middle" fill="white" font-size="16" font-weight="700">CAUSAL MASK  (tgt_mask)</text>
+
+  <text x="590" y="290" fill="#e65100" font-size="13" font-weight="600">WHY IT EXISTS</text>
+  <text x="590" y="310" fill="#37474f" font-size="13.5">During training the decoder sees the full target at</text>
+  <text x="590" y="328" fill="#37474f" font-size="13.5">once. But at inference it generates one token at a time.</text>
+  <text x="590" y="346" fill="#37474f" font-size="13.5">Position i must NOT see positions &gt; i.</text>
+
+  <text x="590" y="378" fill="#e65100" font-size="13" font-weight="600">EXAMPLE (lower-triangular)</text>
+  <!-- Causal mask matrix -->
+  <g transform="translate(590, 390)">
+    <text x="35" y="0" text-anchor="middle" fill="#546e7a" font-size="10" font-weight="600">START</text>
+    <text x="72" y="0" text-anchor="middle" fill="#546e7a" font-size="10" font-weight="600">je</text>
+    <text x="109" y="0" text-anchor="middle" fill="#546e7a" font-size="10" font-weight="600">suis</text>
+    <text x="146" y="0" text-anchor="middle" fill="#546e7a" font-size="10" font-weight="600">étud</text>
+    <!-- Row 0 -->
+    <rect x="18" y="8" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="35" y="23" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="55" y="8" width="34" height="22" rx="3" fill="#ef5350" opacity="0.7"/>
+    <text x="72" y="23" text-anchor="middle" fill="white" font-size="11" font-weight="600">0</text>
+    <rect x="92" y="8" width="34" height="22" rx="3" fill="#ef5350" opacity="0.7"/>
+    <text x="109" y="23" text-anchor="middle" fill="white" font-size="11" font-weight="600">0</text>
+    <rect x="129" y="8" width="34" height="22" rx="3" fill="#ef5350" opacity="0.7"/>
+    <text x="146" y="23" text-anchor="middle" fill="white" font-size="11" font-weight="600">0</text>
+    <text x="175" y="23" fill="#546e7a" font-size="10">← pos 0: only sees START</text>
+    <!-- Row 1 -->
+    <rect x="18" y="33" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="35" y="48" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="55" y="33" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="72" y="48" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="92" y="33" width="34" height="22" rx="3" fill="#ef5350" opacity="0.7"/>
+    <text x="109" y="48" text-anchor="middle" fill="white" font-size="11" font-weight="600">0</text>
+    <rect x="129" y="33" width="34" height="22" rx="3" fill="#ef5350" opacity="0.7"/>
+    <text x="146" y="48" text-anchor="middle" fill="white" font-size="11" font-weight="600">0</text>
+    <text x="175" y="48" fill="#546e7a" font-size="10">← pos 1: sees START, je</text>
+    <!-- Row 2 -->
+    <rect x="18" y="58" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="35" y="73" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="55" y="58" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="72" y="73" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="92" y="58" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="109" y="73" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="129" y="58" width="34" height="22" rx="3" fill="#ef5350" opacity="0.7"/>
+    <text x="146" y="73" text-anchor="middle" fill="white" font-size="11" font-weight="600">0</text>
+    <text x="175" y="73" fill="#546e7a" font-size="10">← pos 2: sees 0-2, NOT étud</text>
+    <!-- Row 3 -->
+    <rect x="18" y="83" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="35" y="98" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="55" y="83" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="72" y="98" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="92" y="83" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="109" y="98" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <rect x="129" y="83" width="34" height="22" rx="3" fill="#4caf50" opacity="0.85"/>
+    <text x="146" y="98" text-anchor="middle" fill="white" font-size="11" font-weight="600">1</text>
+    <text x="175" y="98" fill="#546e7a" font-size="10">← pos 3: sees all (it's last)</text>
+  </g>
+
+  <text x="590" y="518" fill="#546e7a" font-size="12.5">Shape: (1, 1, tgt_len, tgt_len) — lower-triangular</text>
+
+  <!-- ==================== SECTION 2: DECODER OPERATIONS ==================== -->
+  <text x="50" y="575" fill="#1a1a2e" font-size="21" font-weight="700">Inside the Decoder Layer</text>
+  <line x1="50" y1="585" x2="380" y2="585" stroke="#1a1a2e" stroke-width="2.5"/>
+
+  <!-- SELF-ATTENTION BOX -->
+  <rect x="30" y="600" width="505" height="260" rx="10" fill="white" stroke="#1565c0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="30" y="600" width="505" height="42" rx="10" fill="#1565c0"/>
+  <rect x="30" y="632" width="505" height="10" fill="#1565c0"/>
+  <text x="282" y="628" text-anchor="middle" fill="white" font-size="15" font-weight="700">① Self-Attention</text>
+
+  <text x="55" y="665" fill="#1565c0" font-size="13" font-weight="600">Q = decoder · K = decoder · V = decoder</text>
+  <text x="55" y="690" fill="#37474f" font-size="13.5">"Which decoder tokens are relevant to each other?"</text>
+
+  <!-- Diagram: decoder attending to decoder -->
+  <g transform="translate(55, 708)">
+    <text x="0" y="12" fill="#546e7a" font-size="11" font-weight="600">Q (query)</text>
+    <text x="90" y="12" fill="#546e7a" font-size="11">↓</text>
+    <text x="130" y="12" fill="#546e7a" font-size="11" font-weight="600">K, V = decoder tokens</text>
+    <rect x="50" y="22" width="100" height="30" rx="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+    <text x="100" y="42" text-anchor="middle" fill="#1565c0" font-size="12" font-weight="600">decoder</text>
+    <line x1="100" y1="52" x2="100" y2="68" stroke="#1565c0" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+    <rect x="50" y="70" width="100" height="30" rx="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+    <text x="100" y="90" text-anchor="middle" fill="#1565c0" font-size="12" font-weight="600">decoder</text>
+  </g>
+
+  <!-- MASK: tgt_mask -->
+  <rect x="310" y="708" width="200" height="130" rx="8" fill="#fff8e1" stroke="#f57c00" stroke-width="2"/>
+  <text x="410" y="732" text-anchor="middle" fill="#e65100" font-size="14" font-weight="700">USE: tgt_mask</text>
+  <text x="410" y="752" text-anchor="middle" fill="#e65100" font-size="12" font-weight="600">(causal)</text>
+  <line x1="330" y1="760" x2="490" y2="760" stroke="#f57c00" stroke-width="0.5"/>
+  <text x="410" y="780" text-anchor="middle" fill="#37474f" font-size="12">Prevent position i from</text>
+  <text x="410" y="796" text-anchor="middle" fill="#37474f" font-size="12">seeing positions &gt; i</text>
+  <text x="410" y="816" text-anchor="middle" fill="#37474f" font-size="12">in the DECODER</text>
+  <text x="410" y="832" text-anchor="middle" fill="#8d6e63" font-size="11" font-style="italic">At inference, future tokens</text>
+  <text x="410" y="846" text-anchor="middle" fill="#8d6e63" font-size="11" font-style="italic">don't exist yet!</text>
+
+  <!-- CROSS-ATTENTION BOX -->
+  <rect x="30" y="880" width="505" height="260" rx="10" fill="white" stroke="#2e7d32" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="30" y="880" width="505" height="42" rx="10" fill="#2e7d32"/>
+  <rect x="30" y="912" width="505" height="10" fill="#2e7d32"/>
+  <text x="282" y="908" text-anchor="middle" fill="white" font-size="15" font-weight="700">② Cross-Attention</text>
+
+  <text x="55" y="945" fill="#2e7d32" font-size="13" font-weight="600">Q = decoder · K = encoder · V = encoder</text>
+  <text x="55" y="970" fill="#37474f" font-size="13.5">"What parts of the source sentence matter to each decoder position?"</text>
+
+  <!-- Diagram: decoder querying encoder -->
+  <g transform="translate(55, 988)">
+    <text x="0" y="12" fill="#546e7a" font-size="11" font-weight="600">Q (query)</text>
+    <text x="90" y="12" fill="#546e7a" font-size="11">↓</text>
+    <rect x="50" y="22" width="100" height="30" rx="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+    <text x="100" y="42" text-anchor="middle" fill="#1565c0" font-size="12" font-weight="600">decoder</text>
+    <line x1="100" y1="52" x2="100" y2="68" stroke="#1565c0" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+    <rect x="50" y="70" width="100" height="30" rx="5" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+    <text x="100" y="90" text-anchor="middle" fill="#2e7d32" font-size="12" font-weight="600">encoder</text>
+    <text x="130" y="12" fill="#546e7a" font-size="11" font-weight="600">K, V = encoder output</text>
+    <text x="130" y="90" fill="#c62828" font-size="10">has &lt;PAD&gt; tokens!</text>
+  </g>
+
+  <!-- MASK: src_mask -->
+  <rect x="310" y="988" width="200" height="130" rx="8" fill="#e0f2f1" stroke="#0097a7" stroke-width="2"/>
+  <text x="410" y="1012" text-anchor="middle" fill="#00695c" font-size="14" font-weight="700">USE: src_mask</text>
+  <text x="410" y="1032" text-anchor="middle" fill="#00695c" font-size="12" font-weight="600">(padding)</text>
+  <line x1="330" y1="1040" x2="490" y2="1040" stroke="#0097a7" stroke-width="0.5"/>
+  <text x="410" y="1060" text-anchor="middle" fill="#37474f" font-size="12">Ignore &lt;PAD&gt; tokens in</text>
+  <text x="410" y="1076" text-anchor="middle" fill="#37474f" font-size="12">the ENCODER output</text>
+  <text x="410" y="1096" text-anchor="middle" fill="#37474f" font-size="12">The source is fully known —</text>
+  <text x="410" y="1112" text-anchor="middle" fill="#37474f" font-size="12">no causal constraint needed</text>
+
+  <!-- ==================== SECTION 3: WRONG vs CORRECT ==================== -->
+  <text x="50" y="1190" fill="#1a1a2e" font-size="21" font-weight="700">Wrong vs Correct</text>
+  <line x1="50" y1="1200" x2="310" y2="1200" stroke="#1a1a2e" stroke-width="2.5"/>
+
+  <!-- WRONG -->
+  <rect x="30" y="1215" width="505" height="230" rx="10" fill="url(#wrongGrad)" stroke="#c62828" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="30" y="1215" width="505" height="42" rx="10" fill="#c62828"/>
+  <rect x="30" y="1247" width="505" height="10" fill="#c62828"/>
+  <text x="282" y="1243" text-anchor="middle" fill="white" font-size="16" font-weight="700">✗  CURRENT CODE</text>
+
+  <g transform="translate(55, 1275)">
+    <text x="0" y="0" fill="#c62828" font-size="14" font-weight="600">Self-attention (Q,K,V = decoder)</text>
+    <text x="0" y="22" fill="#37474f" font-size="13" font-family="'SF Mono', 'Fira Code', monospace">attention(x, x, x, <tspan fill="#c62828" font-weight="700" text-decoration="line-through">src_mask</tspan>)</text>
+    <text x="0" y="42" fill="#b71c1c" font-size="12.5">→ causal constraint GONE — decoder peeks at future</text>
+    <text x="0" y="58" fill="#b71c1c" font-size="12.5">→ src_mask shape doesn't match decoder seq_len</text>
+  </g>
+  <g transform="translate(55, 1350)">
+    <text x="0" y="0" fill="#c62828" font-size="14" font-weight="600">Cross-attention (Q = decoder, K,V = encoder)</text>
+    <text x="0" y="22" fill="#37474f" font-size="13" font-family="'SF Mono', 'Fira Code', monospace">cross_attn(..., enc_out, enc_out, <tspan fill="#c62828" font-weight="700" text-decoration="line-through">tgt_mask</tspan>)</text>
+    <text x="0" y="42" fill="#b71c1c" font-size="12.5">→ padding constraint GONE — &lt;PAD&gt; tokens leak in</text>
+    <text x="0" y="58" fill="#b71c1c" font-size="12.5">→ tgt_mask shape doesn't match encoder seq_len</text>
+  </g>
+
+  <!-- CORRECT -->
+  <rect x="565" y="1215" width="505" height="230" rx="10" fill="url(#correctGrad)" stroke="#2e7d32" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="565" y="1215" width="505" height="42" rx="10" fill="#2e7d32"/>
+  <rect x="565" y="1247" width="505" height="10" fill="#2e7d32"/>
+  <text x="817" y="1243" text-anchor="middle" fill="white" font-size="16" font-weight="700">✓  CORRECT</text>
+
+  <g transform="translate(590, 1275)">
+    <text x="0" y="0" fill="#2e7d32" font-size="14" font-weight="600">Self-attention (Q,K,V = decoder)</text>
+    <text x="0" y="22" fill="#37474f" font-size="13" font-family="'SF Mono', 'Fira Code', monospace">attention(x, x, x, <tspan fill="#2e7d32" font-weight="700">tgt_mask</tspan>)</text>
+    <text x="0" y="42" fill="#1b5e20" font-size="12.5">→ causal: position i cannot see &gt; i</text>
+    <text x="0" y="58" fill="#1b5e20" font-size="12.5">→ matches decoder seq_len ✓</text>
+  </g>
+  <g transform="translate(590, 1350)">
+    <text x="0" y="0" fill="#2e7d32" font-size="14" font-weight="600">Cross-attention (Q = decoder, K,V = encoder)</text>
+    <text x="0" y="22" fill="#37474f" font-size="13" font-family="'SF Mono', 'Fira Code', monospace">cross_attn(..., enc_out, enc_out, <tspan fill="#2e7d32" font-weight="700">src_mask</tspan>)</text>
+    <text x="0" y="42" fill="#1b5e20" font-size="12.5">→ padding: &lt;PAD&gt; tokens in source are masked</text>
+    <text x="0" y="58" fill="#1b5e20" font-size="12.5">→ matches encoder seq_len ✓</text>
+  </g>
+
+  <!-- ==================== CONSEQUENCES BOX ==================== -->
+  <rect x="30" y="1470" width="1040" height="180" rx="10" fill="white" stroke="#c62828" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="30" y="1470" width="1040" height="38" rx="10" fill="#c62828"/>
+  <rect x="30" y="1498" width="1040" height="10" fill="#c62828"/>
+  <text x="550" y="1496" text-anchor="middle" fill="white" font-size="15" font-weight="700">Consequences of Swapped Masks</text>
+
+  <g transform="translate(60, 1525)">
+    <text x="0" y="0" fill="#c62828" font-size="14" font-weight="600">Self-attention with src_mask (no causal constraint):</text>
+    <text x="20" y="22" fill="#37474f" font-size="13">During training, position 3 learns to copy from position 4. At inference,</text>
+    <text x="20" y="40" fill="#37474f" font-size="13">position 4 doesn't exist yet → model generates garbage. Training loss may</text>
+    <text x="20" y="58" fill="#37474f" font-size="13">look low (it's cheating), but inference quality collapses.</text>
+  </g>
+  <g transform="translate(60, 1600)">
+    <text x="0" y="0" fill="#c62828" font-size="14" font-weight="600">Cross-attention with tgt_mask (no padding constraint):</text>
+    <text x="20" y="22" fill="#37474f" font-size="13">&lt;PAD&gt; encoder outputs get real attention weights. Decoder injects noise</text>
+    <text x="20" y="40" fill="#37474f" font-size="13">from meaningless padding vectors into its representation of the source.</text>
+  </g>
+</svg>

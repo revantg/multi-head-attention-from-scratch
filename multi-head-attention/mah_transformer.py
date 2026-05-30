@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.5"
+__generated_with = "0.23.8"
 app = marimo.App()
 
 
@@ -149,7 +149,7 @@ def _(math, torch):
 
 
 @app.cell
-def _(math, nn, torch):
+def _(emebed_dims, math, nn, torch):
     class PositionalEmbedding(nn.Module):
         def __init__(
             self, 
@@ -157,20 +157,16 @@ def _(math, nn, torch):
             max_seq_len  # max number of tokens
         ):
             super().__init__()
-        
+
             # the job of nn.Embedding is to translate the incoming token to a embedding of a dictionary of fixed size and items
             # we need seperate embeddings for both since this program is written for translating from one language to other. each language will have it's own dict
-            #    - encoder will have dict of source language
-            #    - decoder will have dict of target language
-            self.enc_embed = nn.Embedding(max_seq_len, embed_dims)
-            self.dec_embed = nn.Embedding(max_seq_len, embed_dims)
 
-            pe = torch.zeros(embed_dims, dtype=float)
+            pe = torch.zeros(max_seq_len, embed_dims, dtype=float)
 
             # fraction is just the part inside sin/cos but without the pos
             fraction = torch.exp(
                 -1 * \
-                torch.arange(0, embed_dims, 2, dtype=float) *\
+                torch.arange(0, embed_dims, 2, dtype=float) / emebed_dims *\
                 math.log(10_000)
             )
 
@@ -413,7 +409,7 @@ def _(mo):
         """),
             mo.image(src="images/qkv_count_full_forward_pass.svg"),
             mo.image(src="images/cross_attention_bridge_encoder_decoder.svg")
-    
+
     ])
     return
 
@@ -540,7 +536,7 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
 
         def forward(
             self, 
-        
+
             # emebdding of the tokens decoder has generated/seen before
             #   for training: causal mask enforces constraint to see the
             #                 positions before this
@@ -561,7 +557,7 @@ def _(FeedForwardNN, MultiHeadAttention, nn):
             # encoder's contextualized understnading of the entire sentence
             enc_out
         ):
-        
+
             # running self attention for decoder layer first 
             attn1_out = self.attention(x, x, x, src_mask)
             # residually pass x and apply dropout to the attention scores generaetd
@@ -651,8 +647,9 @@ def _(DecoderLayer, nn):
             ])
 
         def forward(self, x, src_mask, tgt_mask, enc_out):
-            return self.decoder_layers(x, src_mask, tgt_mask, enc_out)
-        
+            for layer in self.decoder_layers:
+                x = layer(x, src_mask, tgt_mask, enc_out)
+            return x
 
     return (DecoderBlock,)
 
@@ -736,6 +733,11 @@ def _(DecoderBlock, EncodeBlock, PositionalEmbedding, nn):
 
             return logits
 
+    return
+
+
+@app.cell
+def _():
     return
 
 
