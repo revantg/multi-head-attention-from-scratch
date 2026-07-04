@@ -1,0 +1,8 @@
+# Static slideshow — no build step. Drag this folder onto https://app.netlify.com/drop
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

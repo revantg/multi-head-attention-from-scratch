@@ -1,0 +1,84 @@
+{
+  "s1_1": {
+    "linear_acc": 0.61,
+    "relu_acc": 1.0
+  },
+  "s1_2": {
+    "one_acc": 0.61,
+    "deep_linear_acc": 0.497,
+    "deep_relu_acc": 1.0,
+    "collapsed_matrix": [
+      [
+        0.022099999710917473,
+        0.03200000151991844
+      ]
+    ]
+  },
+  "s1_3": {
+    "nn_rows": [
+      {
+        "word": "apple",
+        "nn": "dog",
+        "same": false
+      },
+      {
+        "word": "cat",
+        "nn": "dog",
+        "same": true
+      },
+      {
+        "word": "chase",
+        "nn": "eat",
+        "same": true
+      },
+      {
+        "word": "cow",
+        "nn": "cat",
+        "same": true
+      },
+      {
+        "word": "dog",
+        "nn": "cat",
+        "same": true
+      },
+      {
+        "word": "eat",
+        "nn": "see",
+        "same": true
+      },
+      {
+        "word": "mango",
+        "nn": "eat",
+        "same": false
+      },
+      {
+        "word": "see",
+        "nn": "eat",
+        "same": true
+      }
+    ],
+    "same_category": "6/8"
+  },
+  "s1_4": {
+    "rows": [
+      {
+        "n": 20,
+        "train_loss": 0.0,
+        "test_loss": 1.6214,
+        "gap": 1.6214
+      },
+      {
+        "n": 200,
+        "train_loss": 0.0071,
+        "test_loss": 0.9677,
+        "gap": 0.9606
+      },
+      {
+        "n": 2000,
+        "train_loss": 0.3994,
+        "test_loss": 0.127,
+        "gap": -0.2724
+      }
+    ]
+  }
+}
