@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Session 1 — Neural Networks to the Transformer</title>
+  <meta name="description" content="Four proofs from Session 1: activations, depth, embeddings, and data — School of AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- utility bar -->
+  <div class="utility-bar">
+    <span>SCHOOL OF AI</span>
+    <span class="util-right">SESSION 1 · NEURAL NETWORKS → THE TRANSFORMER</span>
+  </div>
+
+  <!-- progress -->
+  <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+  <main id="deck">
+
+    <!-- 0 · COVER -->
+    <section class="slide cover is-active" data-title="Cover">
+      <div class="cover-inner">
+        <div class="eyebrow">FROM NEURAL NETWORKS TO THE TRANSFORMER</div>
+        <h1 class="cover-title">FOUR<br/>PROOFS.<br/><span class="mute-title">NO HAND-WAVING.</span></h1>
+        <p class="lede">Every claim below is trained live in PyTorch, then reduced to a single picture.
+          Activations. Depth. Embeddings. Data — the four ideas everything after this is built on.</p>
+        <div class="cover-index">
+          <div class="ci-row"><span class="ci-num">S1·1</span><span class="ci-label">Activations exist for a reason</span></div>
+          <div class="ci-row"><span class="ci-num">S1·2</span><span class="ci-label">Depth without nonlinearity is a lie</span></div>
+          <div class="ci-row"><span class="ci-num">S1·3</span><span class="ci-label">Embeddings learn similarity from next-token alone</span></div>
+          <div class="ci-row"><span class="ci-num">S1·4</span><span class="ci-label">Data closes the generalization gap</span></div>
+        </div>
+        <div class="cover-actions">
+          <button class="btn-primary cover-cta" data-next>START <span class="arrow">→</span></button>
+          <a class="btn-secondary nb-link" href="notebook.html" target="_blank" rel="noopener">VIEW THE FULL NOTEBOOK ↗</a>
+        </div>
+        <p class="cover-foot">Every result in this deck is our own code — the screenshots come straight from the Jupyter notebook, and the complete <code>Session1_Assignment.ipynb</code> is one click away.</p>
+      </div>
+    </section>
+
+    <!-- 1 · ACTIVATIONS -->
+    <section class="slide" data-title="Activations">
+      <div class="slide-inner">
+        <div class="col-text">
+          <div class="eyebrow">S1·1 — ACTIVATIONS</div>
+          <h2 class="display">A LINE <span class="sale">CAN'T</span><br/>WRAP A RING.</h2>
+          <p class="lede">Two concentric rings — inner class against outer class — are not linearly separable.
+            A single linear layer can only draw a straight boundary, so it stalls near chance.
+            Add <strong>one ReLU hidden layer</strong> and the boundary curls around the ring. Only the activation changed.</p>
+          <div class="stats">
+            <div class="stat stat-bad"><div class="stat-num">61<span>%</span></div><div class="stat-cap">LINEAR LAYER</div></div>
+            <div class="stat stat-good"><div class="stat-num">100<span>%</span></div><div class="stat-cap">+ ONE ReLU</div></div>
+          </div>
+        </div>
+        <figure class="col-media">
+          <img src="assets/s1_1_boundaries.png" alt="Decision boundaries: linear straight line vs ReLU wrapping the ring" />
+          <figcaption>Decision boundaries on the ring task. Left: straight line. Right: the ring, wrapped.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 1b · S1-1 NOTEBOOK -->
+    <section class="slide nb" data-title="S1·1 Notebook">
+      <div class="nb-inner">
+        <header class="nb-head">
+          <div class="eyebrow">S1·1 — FROM OUR NOTEBOOK</div>
+          <h2 class="nb-title">WE BUILT <span class="accent-c">SmartNN</span> BY HAND — AND TRAINED IT TO 100%.</h2>
+          <p class="nb-cap">The class, the training loop, loss falling to <code>0.0000</code>, accuracy hitting <code>1.000</code> — then the boundary it learned, wrapping the ring.</p>
+        </header>
+        <div class="nb-shots two">
+          <figure><img src="assets/nb/s11_model.png" loading="lazy" alt="SmartNN class definition and training loop in Jupyter" /><figcaption>Cells [20]–[21] · the model + training loop, live kernel</figcaption></figure>
+          <figure><img src="assets/nb/s11_relu.png" loading="lazy" alt="ReLU model decision boundary wrapping the ring" /><figcaption>Cell [22] · the learned boundary wraps the ring</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · DEPTH -->
+    <section class="slide" data-title="Depth">
+      <div class="slide-inner">
+        <div class="col-text">
+          <div class="eyebrow">S1·2 — DEPTH</div>
+          <h2 class="display">FIVE LINEAR<br/>LAYERS ARE<br/><span class="sale">STILL ONE.</span></h2>
+          <p class="lede">Stack five linear layers with no activation and they collapse into a single matrix —
+            same straight line, same accuracy as one layer. Depth alone buys nothing.
+            Drop ReLUs between the same five layers and it solves the ring instantly.</p>
+          <div class="collapse-proof">
+            <span class="cp-label">W₅·W₄·W₃·W₂·W₁ &nbsp;collapses to a single 1×2 map</span>
+            <span class="cp-matrix">[ +0.0221&nbsp;&nbsp;&nbsp;+0.0320 ]</span>
+          </div>
+          <div class="stats">
+            <div class="stat stat-bad"><div class="stat-num">61<span>%</span></div><div class="stat-cap">1 LINEAR</div></div>
+            <div class="stat stat-bad"><div class="stat-num">50<span>%</span></div><div class="stat-cap">5 LINEAR</div></div>
+            <div class="stat stat-good"><div class="stat-num">100<span>%</span></div><div class="stat-cap">5 + ReLU</div></div>
+          </div>
+        </div>
+        <figure class="col-media">
+          <img src="assets/s1_2_boundaries.png" alt="1 linear layer, 5 linear layers, and 5 layers with ReLU" />
+          <figcaption>1 layer and 5 stacked linear layers draw the identical line. ReLU breaks the tie.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 2b · S1-2 NOTEBOOK (code) -->
+    <section class="slide nb" data-title="S1·2 Notebook">
+      <div class="nb-inner">
+        <header class="nb-head">
+          <div class="eyebrow">S1·2 — FROM OUR NOTEBOOK</div>
+          <h2 class="nb-title">TWO NETS. ONE <span class="accent-c">WITHOUT</span> ReLU, ONE <span class="accent-c">WITH</span>.</h2>
+          <p class="nb-cap">Both written by hand: <code>DeepLinearNN</code> stacks five <code>nn.Linear</code> layers with no activation; <code>DeepReLU_NN</code> is the identical depth with a ReLU between each. A single training loop trains both.</p>
+        </header>
+        <div class="nb-shots one">
+          <figure><img src="assets/nb/s12_deepclass.png" loading="lazy" alt="DeepLinearNN and DeepReLU_NN class definitions and the shared training loop" /><figcaption>Cells [17]–[18] · both architectures + the shared training loop</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2c · S1-2 NOTEBOOK (boundaries) -->
+    <section class="slide nb" data-title="S1·2 Boundaries">
+      <div class="nb-inner">
+        <header class="nb-head">
+          <div class="eyebrow">S1·2 — FROM OUR NOTEBOOK</div>
+          <h2 class="nb-title">SAME DEPTH. ONE DRAWS A <span class="accent-c">LINE</span>, ONE WRAPS THE <span class="accent-c">RING</span>.</h2>
+          <p class="nb-cap">Five stacked linear layers collapse to a single straight boundary (≈50%). Drop a ReLU between the same five and it solves the ring at 100%. We also multiplied the five weight matrices by hand — the product matched the full net to <code>1e-8</code>.</p>
+        </header>
+        <div class="nb-shots two">
+          <figure class="lc"><img src="assets/nb/s12_linear_plot.png" loading="lazy" alt="5-layer deep linear boundary — a straight line at 0.51" /><figcaption>Cell [19] · 5 linear layers → a straight line · Acc 0.51</figcaption></figure>
+          <figure class="lc"><img src="assets/nb/s12_relu_plot.png" loading="lazy" alt="5-layer deep ReLU boundary wrapping the ring at 1.00" /><figcaption>Cell [20] · 5 layers + ReLU → wraps the ring · Acc 1.00</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · EMBEDDINGS -->
+    <section class="slide" data-title="Embeddings">
+      <div class="slide-inner">
+        <div class="col-text">
+          <div class="eyebrow">S1·3 — EMBEDDINGS</div>
+          <h2 class="display">MEANING,<br/>FROM <span class="info">NEXT-<br/>TOKEN</span> ALONE.</h2>
+          <p class="lede">A tiny embedding→softmax model is trained on one job only: predict the next word in a toy grammar
+            (<em>animals · fruits · verbs</em>). Similarity is never supplied — yet same-category words share
+            next-token distributions, so their vectors drift together. Clusters emerge on their own.</p>
+          <div class="stats">
+            <div class="stat stat-good"><div class="stat-num">6<span>/8</span></div><div class="stat-cap">NEAREST NEIGHBOUR — SAME CATEGORY</div></div>
+            <div class="stat"><div class="stat-num">2<span>D</span></div><div class="stat-cap">EMBEDDING DIM · PLOTTED RAW</div></div>
+          </div>
+        </div>
+        <figure class="col-media">
+          <img src="assets/s1_3_embeddings.png" alt="2D embedding scatter clustered by category" />
+          <figcaption>Learned 2-D embeddings. Animals and verbs form clean clusters; supervision was next-token only.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 3b · S1-3 NOTEBOOK -->
+    <section class="slide nb" data-title="S1·3 Notebook">
+      <div class="nb-inner">
+        <header class="nb-head">
+          <div class="eyebrow">S1·3 — FROM OUR NOTEBOOK</div>
+          <h2 class="nb-title">TRAINED ONLY ON NEXT-TOKEN. THE <span class="accent-c">CLUSTERS</span> APPEARED ANYWAY.</h2>
+          <p class="nb-cap">Left: our <code>DummyNextWordPredictor</code> — an embedding → linear head — with the toy-grammar data and its training loop. Right: the learned 2-D embedding it produced. Nothing told it <em>cat</em> and <em>dog</em> are alike; the next-token objective did.</p>
+        </header>
+        <div class="nb-shots two">
+          <figure><img src="assets/nb/s13_modelcode.png" loading="lazy" alt="DummyNextWordPredictor class, the token data, and the training loop" /><figcaption>Cells [23]–[25] · the model, the data, the training loop</figcaption></figure>
+          <figure class="lc"><img src="assets/nb/s13_graph.png" loading="lazy" alt="2D visualization of learned word embeddings clustered by category" /><figcaption>Projected to 2-D — same-category tokens land together</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · DATA -->
+    <section class="slide" data-title="Data">
+      <div class="slide-inner">
+        <div class="col-text">
+          <div class="eyebrow">S1·4 — DATA</div>
+          <h2 class="display">DATA IS<br/>WHAT CLOSES<br/>THE <span class="sale">GAP.</span></h2>
+          <p class="lede">A 33k-parameter net memorizes 20 points — train loss <code>0.00</code>, test loss <code>1.62</code>.
+            Grow the set to 200, then 2000, and the gap collapses — at 2000 the test loss even dips
+            <em>below</em> train. The model never changed. The data did.</p>
+          <div class="stats">
+            <div class="stat stat-bad"><div class="stat-num">1.62</div><div class="stat-cap">GAP @ 20 POINTS</div></div>
+            <div class="stat"><div class="stat-num">0.96</div><div class="stat-cap">GAP @ 200</div></div>
+            <div class="stat stat-good"><div class="stat-num">−0.27</div><div class="stat-cap">GAP @ 2000</div></div>
+          </div>
+        </div>
+        <figure class="col-media">
+          <img src="assets/s1_4_gap.png" alt="Generalization gap shrinking as dataset grows" />
+          <figcaption>Left: the gap vs. dataset size. Right: train stays low while test falls to meet it.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 4b · S1-4 NOTEBOOK -->
+    <section class="slide nb" data-title="S1·4 Notebook">
+      <div class="nb-inner">
+        <header class="nb-head">
+          <div class="eyebrow">S1·4 — FROM OUR NOTEBOOK</div>
+          <h2 class="nb-title">SAME MODEL, MORE DATA. THE GAP <span class="accent-c">CLOSED.</span></h2>
+          <p class="nb-cap">We trained one 33k-parameter net at 20 / 200 / 2000 points and plotted the result ourselves. The gap crashes as data grows; train loss even <em>rises</em> while test loss falls to meet it — memorized at 20, generalized at 2000. <em>“Data is everything.”</em></p>
+        </header>
+        <div class="nb-shots two">
+          <figure class="lc"><img src="assets/nb/s14_gap_plot.png" loading="lazy" alt="Generalization gap vs dataset size — falls toward zero" /><figcaption>Proof 1 · generalization gap vs dataset size</figcaption></figure>
+          <figure class="lc"><img src="assets/nb/s14_loss_plot.png" loading="lazy" alt="Train vs held-out test loss as data grows — they converge" /><figcaption>Proof 2 · train rises, test falls — they converge</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4c · S1-4 BOUNDARIES -->
+    <section class="slide nb" data-title="S1·4 Boundaries">
+      <div class="nb-inner">
+        <header class="nb-head">
+          <div class="eyebrow">S1·4 — FROM OUR NOTEBOOK</div>
+          <h2 class="nb-title">THE SAME NET, FROM <span class="accent-c">MEMORIZED</span> TO A CLEAN RING.</h2>
+          <p class="nb-cap">One architecture, drawn at three dataset sizes in a single grid we built in the notebook (cell [37]). At 20 points it fences off individual points — memorizing the noise. At 2000 it recovers the true ring, and test accuracy (0.95) finally beats train (0.89).</p>
+        </header>
+        <div class="nb-shots one light-cards">
+          <figure><img src="assets/nb/s14_grid.png" loading="lazy" alt="Grid of decision boundaries at N=20, 200, 2000 showing memorization relaxing into a clean ring" /><figcaption>Cell [37] · one figure, three dataset sizes — memorized → generalized</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · CLOSING -->
+    <section class="slide closing" data-title="Recap">
+      <div class="closing-inner">
+        <div class="eyebrow">THE WHOLE SESSION, IN FOUR LINES</div>
+        <ul class="recap">
+          <li><span class="r-num">01</span><span class="r-text"><strong>Nonlinearity</strong> is what lets a network bend a boundary.</span></li>
+          <li><span class="r-num">02</span><span class="r-text"><strong>Depth</strong> only matters when a nonlinearity sits between the layers.</span></li>
+          <li><span class="r-num">03</span><span class="r-text"><strong>Embeddings</strong> learn structure from prediction alone — the seed of the transformer.</span></li>
+          <li><span class="r-num">04</span><span class="r-text"><strong>Data</strong> is the lever that turns memorization into generalization.</span></li>
+        </ul>
+        <p class="lede closing-lede">Activations bend it. Depth compounds it. Embeddings encode it. Data grounds it.
+          That is the runway to attention.</p>
+        <button class="btn-secondary" data-goto="0">↺&nbsp;&nbsp;REPLAY</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- controls -->
+  <nav class="controls">
+    <div class="counter"><span id="counter">01</span> <span class="counter-total">/ 06</span></div>
+    <div class="dots" id="dots"></div>
+    <div class="nav-pills">
+      <button class="btn-icon" id="prevBtn" aria-label="Previous slide">←</button>
+      <button class="btn-icon" id="nextBtn" aria-label="Next slide">→</button>
+    </div>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
