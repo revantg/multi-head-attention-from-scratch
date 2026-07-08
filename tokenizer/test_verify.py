@@ -6,6 +6,7 @@ Validates all acceptance criteria from the plan.
 import os
 import sys
 import json
+import re
 import subprocess
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -103,24 +104,25 @@ for run_num in range(2):
 
 # ── Test 5: Token count breakdown per section ──
 log("\n--- Evidence: Per-section Token Counts ---")
-# Split into sections by ## headers
+# Parse sections from RAW markdown (headers preserved), then clean each
 sections = []
 current_section = "Introduction"
-current_text = []
-for line in cleaned.split('\n'):
-    if line.strip().startswith('#'):
-        if current_text:
-            sec_text = '\n'.join(current_text).strip()
-            if sec_text:
-                sections.append((current_section, sec_text))
-            current_text = []
-        current_section = line.strip().lstrip('#').strip()
+current_lines = []
+for line in raw.split('\n'):
+    header_match = re.match(r'^#{1,6}\s+(.*)', line)
+    if header_match:
+        if current_lines:
+            sec_raw = '\n'.join(current_lines).strip()
+            if sec_raw:
+                sections.append((current_section, clean_text(sec_raw)))
+            current_lines = []
+        current_section = header_match.group(1).strip()
     else:
-        current_text.append(line)
-if current_text:
-    sec_text = '\n'.join(current_text).strip()
-    if sec_text:
-        sections.append((current_section, sec_text))
+        current_lines.append(line)
+if current_lines:
+    sec_raw = '\n'.join(current_lines).strip()
+    if sec_raw:
+        sections.append((current_section, clean_text(sec_raw)))
 
 for sec_name, sec_text in sections[:10]:  # Show first 10 sections
     sec_ids = tokenizer.encode(sec_text)
