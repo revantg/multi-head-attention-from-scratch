@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tokenizer import IndiaTokenizer, clean_text, extract_words
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(BASE)
 DATA_PATH = os.path.join(BASE, 'data', 'india_wikipedia.md')
 VOCAB_PATH = os.path.join(BASE, 'data', 'vocab_overfitted.json')
 SCRATCH = '/tmp/grok-goal-da8a09f566e0/implementer'
@@ -91,10 +92,12 @@ test("Last para exact match", decl == pl, f"tokens={len(idsl)}")
 
 # ── Test 4: Entry point launches cleanly ──
 log("\n--- Gating: Entry Point Launch ---")
+# Run from repo root as specified in verification plan
+main_py = os.path.join(REPO_ROOT, 'main.py')
 for run_num in range(2):
     result = subprocess.run(
-        [sys.executable, os.path.join(BASE, 'main.py')],
-        capture_output=True, text=True, cwd=BASE
+        [sys.executable, main_py],
+        capture_output=True, text=True, cwd=REPO_ROOT
     )
     test(f"main.py run {run_num+1} exits 0", result.returncode == 0,
          f"exit={result.returncode}")
