@@ -397,6 +397,34 @@ def benchmark(data_path: str, vocab_path: str):
     return x1, total_tokens, len(vocab)
 
 
+# ──────────────────────────────────────────────────────────────────────
+# Module-level convenience API
+# ──────────────────────────────────────────────────────────────────────
+
+def get_tokenizer(vocab_path: Optional[str] = None) -> IndiaTokenizer:
+    """Load or build the tokenizer. Returns an IndiaTokenizer instance."""
+    if vocab_path is None:
+        base = os.path.dirname(os.path.abspath(__file__))
+        vocab_path = os.path.join(base, 'data', 'vocab_overfitted.json')
+    with open(vocab_path, 'r', encoding='utf-8') as f:
+        vocab = json.load(f)
+    return IndiaTokenizer(vocab)
+
+
+def encode(text: str, tokenizer: Optional[IndiaTokenizer] = None) -> List[int]:
+    """Encode text to token IDs."""
+    if tokenizer is None:
+        tokenizer = get_tokenizer()
+    return tokenizer.encode(text)
+
+
+def decode(token_ids: List[int], tokenizer: Optional[IndiaTokenizer] = None) -> str:
+    """Decode token IDs back to text."""
+    if tokenizer is None:
+        tokenizer = get_tokenizer()
+    return tokenizer.decode(token_ids)
+
+
 if __name__ == '__main__':
     base = os.path.dirname(os.path.abspath(__file__))
     data = os.path.join(base, 'data', 'india_wikipedia.md')
