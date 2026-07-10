@@ -1,0 +1,13 @@
+[project]
+name = "tokenizer"
+version = "0.1.0"
+description = "Overfitted multilingual tokenizer for India Wikipedia dataset"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
