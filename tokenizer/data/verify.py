@@ -70,7 +70,7 @@ with open(VOCAB_PATH, 'r', encoding='utf-8') as f:
 tokenizer = IndiaTokenizer(vocab)
 token_ids = tokenizer.encode(cleaned)
 token_count = len(token_ids)
-vocab_size = len(vocab)
+vocab_size = tokenizer.get_vocab_size()
 x1 = token_count / 5000
 word_count = len(extract_words(cleaned))
 
