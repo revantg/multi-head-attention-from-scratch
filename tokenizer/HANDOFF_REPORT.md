@@ -75,10 +75,21 @@ Build a tokenizer for India's Wikipedia page (English, Hindi, Telugu, + one more
 
 #### Vocabulary Files
 
-| File | Description | Tokens |
-|------|-------------|--------|
-| `tokenizer/vocab_multilingual.json` | Final multilingual vocabulary (overfitted) | 9,714 |
-| `tokenizer/data/vocab_aggressive_5.json` | Aggressive n-gram vocabulary | — |
+| File | Description |
+|------|-------------|
+| `tokenizer/vocab_multilingual.json` | Final multilingual vocabulary (overfitted, 9,714 tokens) |
+| `tokenizer/data/vocab_multilingual.json` | Copy in data directory |
+| `tokenizer/data/vocab_aggressive_5.json` | Aggressive n-gram vocab (min 5 freq) |
+| `tokenizer/data/vocab_aggressive_6.json` | Aggressive n-gram vocab (min 6 freq) |
+| `tokenizer/data/vocab_aggressive_8.json` | Aggressive n-gram vocab (min 8 freq) |
+| `tokenizer/data/vocab_aggressive_10.json` | Aggressive n-gram vocab (min 10 freq) |
+| `tokenizer/data/vocab_bpe.json` | BPE vocabulary |
+| `tokenizer/data/vocab.json` | Initial vocabulary |
+| `tokenizer/data/vocab_optimized.json` | Optimized vocabulary |
+| `tokenizer/data/vocab_optimized_v2.json` | Optimized vocabulary v2 |
+| `tokenizer/data/vocab_overfitted.json` | Overfitted vocabulary |
+| `tokenizer/data/vocab_word_bigram.json` | Word bigram vocabulary |
+| `tokenizer/data/bpe_merges.json` | BPE merge rules |
 
 #### Test & Verification Files
 
@@ -103,6 +114,14 @@ Build a tokenizer for India's Wikipedia page (English, Hindi, Telugu, + one more
 | `tokenizer/pyproject.toml` | Project configuration |
 | `tokenizer/.python-version` | Python version pin |
 | `tokenizer/README.md` | Empty README |
+
+#### Data Processing Scripts
+
+| File | Description |
+|------|-------------|
+| `tokenizer/data/clean_convert.py` | Data cleaning/conversion script |
+| `tokenizer/data/clean_mediawiki.py` | MediaWiki markup cleaner |
+| `tokenizer/data/clean_wiki_md.py` | Wiki to markdown converter |
 
 #### Source Data
 
