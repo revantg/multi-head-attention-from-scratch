@@ -63,10 +63,51 @@ Build a tokenizer for India's Wikipedia page (English, Hindi, Telugu, + one more
 
 ### Files Created
 
+#### Core Tokenizer Implementations
+
+| File | Description | X1 Score |
+|------|-------------|----------|
+| `tokenizer/tokenizer.py` | Main tokenizer class (`IndiaTokenizer`) — DP + n-gram approach | 1.1950 |
+| `tokenizer/bpe_tokenizer.py` | Real BPE tokenizer implementation | 3.32 |
+| `tokenizer/word_bigram_tokenizer.py` | Word + bigram tokenizer with DP | 1.68 |
+| `tokenizer/optimize_tokenizer.py` | Optimization script for word+bigram approach | — |
+| `tokenizer/aggressive_optimize.py` | Aggressive n-gram optimization script | 1.375 |
+
+#### Vocabulary Files
+
+| File | Description | Tokens |
+|------|-------------|--------|
+| `tokenizer/vocab_multilingual.json` | Final multilingual vocabulary (overfitted) | 9,714 |
+| `tokenizer/data/vocab_aggressive_5.json` | Aggressive n-gram vocabulary | — |
+
+#### Test & Verification Files
+
 | File | Description |
 |------|-------------|
-| `tokenizer/tokenizer.py` | Main tokenizer class (`IndiaTokenizer`) |
-| `tokenizer/vocab_multilingual.json` | Vocabulary (9,714 tokens) |
+| `tokenizer/test_tokenizer.py` | Comprehensive unittest verification |
+| `tokenizer/test_api.py` | API test for module-level encode/decode |
+| `tokenizer/test_roundtrip.py` | Roundtrip encode/decode tests |
+| `tokenizer/test_deep.py` | Deep verification tests |
+| `tokenizer/test_verification.py` | Verification matching plan steps |
+| `tokenizer/test_verify.py` | Additional verification tests |
+| `tokenizer/data/verify.py` | Standalone verification script |
+| `tokenizer/data/conftest.py` | Pytest configuration |
+| `tokenizer/data/sitecustomize.py` | Python path setup |
+
+#### Documentation & Config
+
+| File | Description |
+|------|-------------|
+| `tokenizer/HANDOFF_REPORT.md` | This report |
+| `tokenizer/__init__.py` | Python package init |
+| `tokenizer/pyproject.toml` | Project configuration |
+| `tokenizer/.python-version` | Python version pin |
+| `tokenizer/README.md` | Empty README |
+
+#### Source Data
+
+| File | Description |
+|------|-------------|
 | `tokenizer/data/india_wikipedia.md` | Source dataset (pre-existing) |
 
 ### Architecture
