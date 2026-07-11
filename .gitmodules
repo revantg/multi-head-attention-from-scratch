@@ -1,0 +1,3 @@
+[submodule "session2-tokenizer"]
+	path = session2-tokenizer
+	url = https://github.com/revantg/tokenizer-assignment.git
